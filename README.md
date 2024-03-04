@@ -1,3 +1,5 @@
+[![Docker Image CI](https://github.com/atcomputing/moodledb-exporter/actions/workflows/docker-image.yml/badge.svg?branch=main)](https://github.com/atcomputing/moodledb-exporter/actions/workflows/docker-image.yml)
+
 # Moodle Metrics Collector
 
 This project provides a Prometheus metrics collector for Moodle, designed to run in a Docker container. It collects various metrics from a Moodle database, such as active users, online users, total users, database size, number of enrolled users per course, average time spent on the site, number of failed login attempts, and number of assignments submitted.
