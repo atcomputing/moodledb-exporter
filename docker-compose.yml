@@ -1,0 +1,17 @@
+version: '3.8'
+services:
+  moodledb_exporter:
+    container_name: moodledb_exporter
+    image: git.atcomputing.nl:5050/training/infra/moodledb-exporter:latest
+    build: .
+    ports:
+      - "8899:8899"
+    env_file:
+      - .env
+    restart: unless-stopped
+    networks:
+      - moodle_default
+
+networks:
+  moodle_default:
+    external: true

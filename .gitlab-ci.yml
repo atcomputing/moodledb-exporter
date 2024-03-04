@@ -1,0 +1,70 @@
+stages:
+  - verify
+  - build
+  - test
+  - publish
+
+# YAML anchor for login command which will be used in multiple places
+.docker_login: &docker_login |
+  echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+
+.crane_auth: &crane_auth |
+  crane auth login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+
+lint:
+  stage: verify
+  image: registry.gitlab.com/pipeline-components/hadolint:latest
+  script:
+    - hadolint -t warning ./Dockerfile
+  except:
+    - tags
+
+build:
+  stage: build
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  script:
+    - mkdir -p /kaniko/.docker
+    - *docker_login # Use the defined YAML anchor
+    - /kaniko/executor
+        --context $CI_PROJECT_DIR
+        --dockerfile $CI_PROJECT_DIR/Dockerfile
+        --destination $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+        --snapshotMode=redo
+        --use-new-run
+  timeout: 2h
+
+test:
+  stage: test
+  image:
+    name: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME
+    entrypoint: [""]
+  script:
+    - echo "OK"
+  except:
+    - tags
+
+publish:
+  stage: publish
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [""]
+  before_script:
+    - *crane_auth # Use the defined YAML anchor
+  script:
+    - crane tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME  $CI_COMMIT_REF_NAME
+  except:
+    - main
+
+publish_latest:
+  stage: publish
+  image:
+    name: gcr.io/go-containerregistry/crane:debug
+    entrypoint: [""]
+  before_script:
+    - *crane_auth # Use the defined YAML anchor
+  script:
+    - crane tag $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_NAME latest
+  only:
+    - main

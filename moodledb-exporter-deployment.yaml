@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: moodledb-exporter-deployment
+  labels:
+    app: moodledb-exporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: moodledb-exporter
+  template:
+    metadata:
+      labels:
+        app: moodledb-exporter
+    spec:
+      containers:
+      - name: moodledb-exporter
+        image: git.atcomputing.nl:5050/training/infra/moodledb-exporter:latest
+        ports:
+        - containerPort: 8899
+        env:
+        - name: DB_HOST
+          value: "db_host_here"
+        - name: DB_USER
+          value: "db_user_here"
+        - name: DB_PASSWORD
+          value: "db_password_here"
+        - name: DB_NAME
+          value: "moodle_database_name_here"
+        - name: SLEEP_INTERVAL
+          value: "60"
+        - name: SERVER_PORT
+          value: "8899"
+        - name: BASIC_AUTH_USERNAME
+          value: "basic_auth_username_here"
+        - name: BASIC_AUTH_PASSWORD
+          value: "basic_auth_password_here"
+      restartPolicy: UnlessStopped
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: moodledb-exporter-service
+spec:
+  selector:
+    app: moodledb-exporter
+  ports:
+  - protocol: TCP
+    port: 8899
+    targetPort: 8899
+  type: ClusterIP
+
+---
+
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: moodledb-exporter-ingress
+  annotations:
+    # Include any specific annotations for your ingress controller, if required.
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /moodledb-exporter
+        pathType: Prefix
+        backend:
+          service:
+            name: moodledb-exporter-service
+            port:
+              number: 8899
+
