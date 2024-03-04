@@ -3,8 +3,8 @@ name: Docker Image CI
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+    tags:
+      - '*'
 
 jobs:
   build:
@@ -25,4 +25,13 @@ jobs:
       with:
         context: .
         push: true
-        tags: ghcr.io/${{ github.repository }}/minio-backup:latest
+        tags: ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}:latest
+
+        - name: Build and push Docker image with the tag name
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository }}:${{ github.event.repository.name }}:${{ github.ref_name }}
