@@ -34,4 +34,4 @@ jobs:
         context: .
         push: true
         tags: |
-          ghcr.io/${{ github.repository }}:${{ github.event.repository.name }}:${{ github.ref_name }}
+          ghcr.io/${{ github.repository }}/${{ github.event.repository.name }}:${{ github.ref_name }}
